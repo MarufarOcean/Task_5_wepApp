@@ -1,0 +1,7 @@
+﻿.auth-bg {
+    background: linear-gradient(135deg, #3b82f6, #9333ea);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* optional: add a geometric SVG or PNG pattern */
+}

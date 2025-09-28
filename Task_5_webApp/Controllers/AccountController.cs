@@ -108,8 +108,8 @@ namespace Task_5_webApp.Controllers
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email)
             };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            var identity = new ClaimsIdentity(claims, "cookie");
+            await HttpContext.SignInAsync("cookie", new ClaimsPrincipal(identity));
 
             return RedirectToAction("Index", "Users");
         }
@@ -117,7 +117,7 @@ namespace Task_5_webApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
+            await HttpContext.SignOutAsync("cookie");
             return RedirectToAction("Login");
         }
 

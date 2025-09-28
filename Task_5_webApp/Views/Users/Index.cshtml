@@ -1,0 +1,107 @@
+﻿<!-- Views/Users/Index.cshtml -->
+@model IEnumerable<Task_5_webApp.Models.User>
+@{
+    Layout = "_Layout";
+}
+<div class="d-flex align-items-center mb-2">
+    <form id="toolbarForm" method="post" class="d-flex gap-2">
+        <!-- IMPORTANT: toolbar stays visible, uses icons/labels -->
+        <button formaction="/Users/Block" class="btn btn-outline-danger" id="btnBlock" disabled>
+            Block
+        </button>
+        <button formaction="/Users/Unblock" class="btn btn-outline-success" id="btnUnblock" disabled title="Unblock selected">
+            <i class="bi bi-unlock"></i> Unblock
+        </button>
+        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete" disabled title="Delete selected">
+            <i class="bi bi-trash"></i> Delete
+        </button>
+        <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
+            <i class="bi bi-person-x"></i> Delete unverified
+        </button>
+    </form>
+    <div class="ms-auto">
+        <div class="btn-group">
+            <a href="/Users?sort=lastlogin_desc" class="btn btn-sm btn-light">Sort: Last login ↓</a>
+            <a href="/Users?sort=name_asc" class="btn btn-sm btn-light">Sort: Name A→Z</a>
+            <a href="/Users?sort=name_desc" class="btn btn-sm btn-light">Sort: Name Z→A</a>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th style="width:40px;">
+                <input type="checkbox" id="chkAll" />
+            </th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Last login</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>
+                    <input type="checkbox" class="rowchk" value="@u.Id" />
+                </td>
+                <td>@u.Name</td>
+                <td>@u.Email</td>
+                <td>@(u.LastLoginTime?.ToString("g") ?? "-")</td>
+                <td>
+                    <span class="badge bg-@(u.Status == "active" ? "success" : u.Status == "blocked" ? "danger" : "secondary")">@u.Status</span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- NO wallpapers, NO animations, NO row buttons -->
+<!-- Tooltips init -->
+@section Scripts {
+    <script>
+        // IMPORTANT: simple unique id generator for client usage
+        function getUniqIdValue(prefix = "uid") {
+          // note: combines time + random for uniqueness on page
+          return `${prefix}-${Date.now()}-${Math.floor(Math.random()*1e6)}`;
+        }
+
+        (() => {
+          // nota bene: enable/disable toolbar buttons based on selection
+          const chkAll = document.getElementById('chkAll');
+          const rowChks = Array.from(document.querySelectorAll('.rowchk'));
+          const toolbarForm = document.getElementById('toolbarForm');
+          const btns = ['btnBlock','btnUnblock','btnDelete'].map(id=>document.getElementById(id));
+
+          function refreshToolbar() {
+            const any = rowChks.some(c => c.checked);
+            btns.forEach(b => b.disabled = !any);
+            // IMPORTANT: sync selected IDs as hidden inputs
+            Array.from(toolbarForm.querySelectorAll('input[name="ids"]')).forEach(el=>el.remove());
+            if (any) {
+              rowChks.filter(c=>c.checked).forEach(c=>{
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'ids';
+                hidden.value = c.value;
+                toolbarForm.appendChild(hidden);
+              });
+            }
+          }
+
+          chkAll.addEventListener('change', () => {
+            rowChks.forEach(c => c.checked = chkAll.checked);
+            refreshToolbar();
+          });
+          rowChks.forEach(c => c.addEventListener('change', refreshToolbar));
+
+          // Bootstrap tooltips
+          const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+          });
+        })();
+    </script>
+}

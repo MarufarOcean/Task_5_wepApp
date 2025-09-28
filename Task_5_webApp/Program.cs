@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Task_5_webApp.Data;
+using Task_5_webApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,8 @@ builder.Services.AddAuthentication("cookie")
         opts.AccessDeniedPath = "/Account/Login";
     });
 
-//builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-//builder.Services.AddScoped<IUserGuard, UserGuard>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IUserGuard, UserGuard>();
 
 
 
@@ -39,34 +40,34 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Global guard for all requests except login/register/confirm
-//app.Use(async (ctx, next) =>
-//{
-//    var path = ctx.Request.Path.Value?.ToLower() ?? "";
-//    // IMPORTANT: allow authentication endpoints without user/blocked checks
-//    if (path.StartsWith("/account/login") || path.StartsWith("/account/register") || path.StartsWith("/account/confirm"))
-//    {
-//        await next();
-//        return;
-//    }
+//Global guard for all requests except login/register/confirm
+app.Use(async (ctx, next) =>
+{
+    var path = ctx.Request.Path.Value?.ToLower() ?? "";
+// IMPORTANT: allow authentication endpoints without user/blocked checks
+if (path.StartsWith("/account/login") || path.StartsWith("/account/register") || path.StartsWith("/account/confirm"))
+{
+    await next();
+    return;
+}
 
-//    // nota bene: check existence + not blocked for authenticated areas
-//    var guard = ctx.RequestServices.GetRequiredService<IUserGuard>();
-//    var ok = await guard.CheckUserAllowedAsync(ctx);
-//    if (!ok)
-//    {
-//        ctx.Response.Redirect("/Account/Login");
-//        return;
-//    }
-//    await next();
-//});
+// nota bene: check existence + not blocked for authenticated areas
+var guard = ctx.RequestServices.GetRequiredService<IUserGuard>();
+var ok = await guard.CheckUserAllowedAsync(ctx);
+if (!ok)
+{
+    ctx.Response.Redirect("/Account/Login");
+    return;
+}
+await next();
+});
 
 
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 

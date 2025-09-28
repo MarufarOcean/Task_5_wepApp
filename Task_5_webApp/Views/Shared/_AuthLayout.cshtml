@@ -1,0 +1,16 @@
+﻿@{
+    Layout = "_Layout";
+    <!-- keep your existing header/navbar -->
+}
+<div class="container-fluid vh-100">
+    <div class="row h-100">
+        <!-- Left: Form -->
+        <div class="col-md-6 d-flex align-items-center justify-content-center bg-light">
+            <div class="w-75">
+                @RenderBody()
+            </div>
+        </div>
+        <!-- Right: Background -->
+        <div class="col-md-6 d-none d-md-block auth-bg"></div>
+    </div>
+</div>
