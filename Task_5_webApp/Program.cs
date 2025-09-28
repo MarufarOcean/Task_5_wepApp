@@ -1,0 +1,73 @@
+using Microsoft.EntityFrameworkCore;
+using Task_5_webApp.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<AppDBContext>(opts =>
+    opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddControllersWithViews();
+
+// IMPORTANT: Cookie auth (simple) to allow one-char passwords, not using Identity policies
+builder.Services.AddAuthentication("cookie")
+    .AddCookie("cookie", opts =>
+    {
+        opts.LoginPath = "/Account/Login";
+        opts.LogoutPath = "/Account/Logout";
+        opts.AccessDeniedPath = "/Account/Login";
+    });
+
+//builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+//builder.Services.AddScoped<IUserGuard, UserGuard>();
+
+
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Global guard for all requests except login/register/confirm
+//app.Use(async (ctx, next) =>
+//{
+//    var path = ctx.Request.Path.Value?.ToLower() ?? "";
+//    // IMPORTANT: allow authentication endpoints without user/blocked checks
+//    if (path.StartsWith("/account/login") || path.StartsWith("/account/register") || path.StartsWith("/account/confirm"))
+//    {
+//        await next();
+//        return;
+//    }
+
+//    // nota bene: check existence + not blocked for authenticated areas
+//    var guard = ctx.RequestServices.GetRequiredService<IUserGuard>();
+//    var ok = await guard.CheckUserAllowedAsync(ctx);
+//    if (!ok)
+//    {
+//        ctx.Response.Redirect("/Account/Login");
+//        return;
+//    }
+//    await next();
+//});
+
+
+app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
+
+
+app.Run();
