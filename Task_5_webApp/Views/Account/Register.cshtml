@@ -2,25 +2,37 @@
     Layout = "_AuthLayout";
     ViewData["Title"] = "Register";
 }
-<h2 class="mb-2">Join us today</h2>
-<h5 class="mb-4">Create your account</h5>
+<h5 class="mb-2 opacity-50 fs-4">Join us today</h5>
+<h2 class="mb-4">Create your account</h2>
 
 <form method="post">
-    <div class="mb-3">
-        <span class="input-group-text"><i class="bi bi-person"></i></span>
-        <input type="text" name="name" class="form-control" placeholder="Your full name" required />
+    <!-- Name -->
+    <div class="form-floating mb-3 position-relative">
+        <input type="text" class="form-control pe-5" id="name" name="name" placeholder="Your full name" required>
+        <label for="name" class="opacity-50" >Full Name</label>
+        <i class="bi bi-person position-absolute top-50 end-0 translate-middle-y me-3 text-muted fs-4 opacity-50"></i>
     </div>
-    <div class="mb-3">
-        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-        <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
+
+    <!-- Email -->
+    <div class="form-floating mb-3 position-relative">
+        <input type="email" class="form-control pe-5" id="email" name="email" placeholder="you@example.com" required>
+        <label for="email" class="opacity-50" >Email address</label>
+        <i class="bi bi-envelope-fill position-absolute top-50 end-0 translate-middle-y me-3 text-muted fs-4 opacity-50"></i>
     </div>
-    <div class="mb-3">
-        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-        <input type="password" name="password" class="form-control" placeholder="••••••••" required />
+
+    <!-- Password with toggle -->
+    <div class="form-floating mb-3 position-relative">
+        <input type="password" class="form-control pe-5" id="password" name="password" placeholder="Password" required>
+        <label for="password" class="opacity-50" >Password</label>
+        <button type="button" class="btn btn-sm btn-link text-muted position-absolute top-50 end-0 translate-middle-y me-2"
+                id="togglePassword" tabindex="-1">
+            <i class="bi bi-eye fs-4 opacity-50 "></i>
+        </button>
     </div>
+
     <button type="submit" class="btn btn-success w-100">Sign Up</button>
 </form>
 
 <div class="mt-3">
-    <a href="/Account/Login">Already have an account? Sign in</a>
+    <span>Already have an account? <a href="/Account/Login">Sign in</a></span>
 </div>
