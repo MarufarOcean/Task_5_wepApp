@@ -1,4 +1,23 @@
 ﻿@model IEnumerable<Task_5_webApp.Models.User>
+
+@functions {
+    public string GetRelativeTime(DateTime dt)
+    {
+        var span = DateTime.UtcNow - dt.ToUniversalTime();
+        if (span.TotalSeconds < 60)
+            return $"{(int)span.TotalSeconds} seconds ago";
+        if (span.TotalMinutes < 60)
+            return $"{(int)span.TotalMinutes} minutes ago";
+        if (span.TotalHours < 24)
+            return $"{(int)span.TotalHours} hours ago";
+        if (span.TotalDays < 7)
+            return $"{(int)span.TotalDays} days ago";
+        if (span.TotalDays < 30)
+            return $"{(int)(span.TotalDays / 7)} weeks ago";
+        return dt.ToString("dd-MMM-yyyy");
+    }
+}   
+
 @{
     Layout = "_Layout";
     string sort = Context.Request.Query["sort"];
@@ -31,7 +50,7 @@
         <button formaction="/Users/Unblock" class="btn btn-outline-success" id="btnUnblock" disabled title="Unblock selected">
             <i class="bi bi-unlock"></i> Unblock
         </button>
-        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete" disabled title="Delete selected">
+        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete"  title="Delete selected">
             <i class="bi bi-trash"></i> Delete
         </button>
         <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
@@ -41,7 +60,7 @@
 
     <!-- Filter aligned right -->
     <div class="ms-auto" style="min-width: 250px;">
-        <input type="text" class="form-control opacity-50" placeholder="Filter" />
+        <input type="text" class="form-control" placeholder="Filter" />
     </div>
 </div>
 
@@ -55,7 +74,7 @@
             <th>@Html.Raw(sortLink("name"))</th>
             <th>@Html.Raw(sortLink("email"))</th>
             <th>Status</th>
-            <th>@Html.Raw(sortLink("lastlogin"))</th>
+            <th>@Html.Raw(sortLink("lastlogin").Replace("Last login", "Last seen"))</th>
         </tr>
     </thead>
     <tbody>
@@ -71,7 +90,13 @@
                 <td>
                     <span class="badge bg-@(u.Status == "active" ? "success" : u.Status == "blocked" ? "danger" : "secondary")">@u.Status</span>
                 </td>
-                <td>@(u.LastLoginTime?.ToString("g") ?? "-")</td>
+                @{
+                    var lastSeen = u.LastLoginTime;
+                    string tooltip = lastSeen?.ToString("f") ?? "Never logged in";
+                    string relative = lastSeen == null ? "-" : GetRelativeTime(lastSeen.Value);
+                }
+                <td data-bs-toggle="tooltip" title="@tooltip">@relative</td>
+
             </tr>
         }
     </tbody>
@@ -87,23 +112,36 @@
 
             function refreshToolbar() {
                 const total = rowChks.length;
-                const checked = rowChks.filter(c => c.checked).length;
+                const checkedRows = rowChks.filter(c => c.checked);
+                const checked = checkedRows.length;
 
                 chkAll.indeterminate = checked > 0 && checked < total;
                 chkAll.checked = checked === total;
 
-                btns.forEach(b => b.disabled = checked === 0);
+                // Reset buttons
+                btnBlock.disabled = true;
+                btnUnblock.disabled = true;
 
-                toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
-                if (checked > 0) {
-                    rowChks.filter(c => c.checked).forEach(c => {
-                        const hidden = document.createElement('input');
-                        hidden.type = 'hidden';
-                        hidden.name = 'ids';
-                        hidden.value = c.value;
-                        toolbarForm.appendChild(hidden);
-                    });
+                // Determine status of selected users
+                const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4) .badge").textContent.trim());
+
+                if (selectedStatuses.length > 0) {
+                    const allBlocked = selectedStatuses.every(s => s === "blocked");
+                    const allUnblocked = selectedStatuses.every(s => s !== "blocked");
+
+                    btnBlock.disabled = !allUnblocked;
+                    btnUnblock.disabled = !allBlocked;
                 }
+
+                // Sync selected IDs
+                toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
+                checkedRows.forEach(c => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'ids';
+                    hidden.value = c.value;
+                    toolbarForm.appendChild(hidden);
+                });
             }
 
             chkAll.addEventListener('change', () => {

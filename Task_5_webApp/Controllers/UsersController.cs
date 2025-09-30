@@ -52,7 +52,14 @@ namespace Task_5_webApp.Controllers
         public async Task<IActionResult> Unblock([FromForm] int[] ids)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
-            foreach (var u in set) if (u.Status != "unverified") u.Status = "active";
+            foreach (var u in set)
+            {
+                if (u.Status == "blocked")
+                {
+                    // Restore to previous state
+                    u.Status = string.IsNullOrEmpty(u.LastLoginTime?.ToString()) ? "unverified" : "active";
+                }
+            }
             await _db.SaveChangesAsync();
             TempData["Success"] = "Selected users unblocked.";
             return RedirectToAction("Index");
