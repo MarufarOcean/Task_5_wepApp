@@ -11,7 +11,7 @@ namespace Task_5_webApp.Services
 
         public async Task<bool> CheckUserAllowedAsync(HttpContext ctx)
         {
-            // IMPORTANT: returns false if not authenticated, not found, or blocked
+            //returns false if not authenticated, not found, or blocked
             var idStr = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(idStr)) return false;
 

@@ -13,19 +13,26 @@ namespace Task_5_webApp.Controllers
 
         public UsersController(AppDBContext db) { _db = db; }
 
+        //[HttpGet]
+        //public IActionResult Index() => View();
+
         [HttpGet]
         public async Task<IActionResult> Index(string sort = "lastlogin_desc")
         {
             var q = _db.Users.AsNoTracking();
 
-            // IMPORTANT: sorting
+            // Sorting logic
             q = sort switch
             {
-                "lastlogin_asc" => q.OrderBy(u => u.LastLoginTime),
                 "name_asc" => q.OrderBy(u => u.Name),
                 "name_desc" => q.OrderByDescending(u => u.Name),
-                _ => q.OrderByDescending(u => u.LastLoginTime) // default
+                "email_asc" => q.OrderBy(u => u.Email),
+                "email_desc" => q.OrderByDescending(u => u.Email),
+                "lastlogin_asc" => q.OrderBy(u => u.LastLoginTime ?? DateTime.MinValue),
+                "lastlogin_desc" => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue),
+                _ => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue)
             };
+
 
             var users = await q.ToListAsync();
             return View(users);
@@ -55,7 +62,7 @@ namespace Task_5_webApp.Controllers
         public async Task<IActionResult> Delete([FromForm] int[] ids)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
-            // IMPORTANT: hard delete (not a flag)
+            //hard delete (not a flag)
             _db.Users.RemoveRange(set);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Selected users deleted.";

@@ -18,7 +18,7 @@ namespace Task_5_webApp.Services
             };
             message.Body = body;
 
-            // IMPORTANT: configure SMTP for testing (e.g., Gmail SMTP or local)
+            //configure SMTP for testing (e.g., Gmail SMTP or local)
             using var client = new SmtpClient();
             await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
             await client.AuthenticateAsync("yourgmail@gmail.com", "app_password");
