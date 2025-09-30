@@ -85,7 +85,10 @@
                 <td>
                     <input type="checkbox" class="rowchk" value="@u.Id" />
                 </td>
-                <td class="@(isBlocked ? "text-decoration-line-through" : "")">@u.Name</td>
+                <td class="@(isBlocked ? "text-decoration-line-through" : "")">
+                    <div>@u.Name</div>
+                    <div class="text-muted small">@u.Designation</div>
+                </td>
                 <td>@u.Email</td>
                 <td>
                     <span class="badge bg-@(u.Status == "active" ? "success" : u.Status == "blocked" ? "danger" : "secondary")">@u.Status</span>

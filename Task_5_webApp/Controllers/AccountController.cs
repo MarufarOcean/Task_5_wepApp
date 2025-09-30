@@ -24,7 +24,7 @@ namespace Task_5_webApp.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(string name, string email, string password)
+        public async Task<IActionResult> Register(string name, string desgntn, string email, string password)
         {
             if (string.IsNullOrWhiteSpace(password))
             {
@@ -35,6 +35,7 @@ namespace Task_5_webApp.Controllers
             var user = new User
             {
                 Name = name,
+                Designation = desgntn,
                 Email = email,
                 PasswordHash = PasswordHasher.Hash(password),
                 Status = "unverified"
