@@ -95,7 +95,7 @@
                     string tooltip = lastSeen?.ToString("f") ?? "Never logged in";
                     string relative = lastSeen == null ? "-" : GetRelativeTime(lastSeen.Value);
                 }
-                <td data-bs-toggle="tooltip" title="@tooltip">@relative</td>
+                <td data-bs-toggle="tooltip" title="@tooltip" style="cursor: pointer;">@relative</td>
 
             </tr>
         }
