@@ -13,8 +13,6 @@ namespace Task_5_webApp.Controllers
 
         public UsersController(AppDBContext db) { _db = db; }
 
-        //[HttpGet]
-        //public IActionResult Index() => View();
 
         [HttpGet]
         public async Task<IActionResult> Index(string sort = "lastlogin_desc")
@@ -38,6 +36,21 @@ namespace Task_5_webApp.Controllers
             return View(users);
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
+            if (user == null) return NotFound();
+
+            user.IsEmailVerified = true;
+            user.Status = "active";   // active after verification
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Your email has been verified. Account is now active.";
+            return RedirectToAction("Login");
+        }
+
         [HttpPost]
         public async Task<IActionResult> Block([FromForm] int[] ids)
         {
@@ -56,8 +69,7 @@ namespace Task_5_webApp.Controllers
             {
                 if (u.Status == "blocked")
                 {
-                    // Restore to previous state
-                    u.Status = string.IsNullOrEmpty(u.LastLoginTime?.ToString()) ? "unverified" : "active";
+                    u.Status = u.IsEmailVerified ? "active" : "unverified";
                 }
             }
             await _db.SaveChangesAsync();
