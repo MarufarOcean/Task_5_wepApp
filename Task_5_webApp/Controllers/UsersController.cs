@@ -36,7 +36,6 @@ namespace Task_5_webApp.Controllers
             return View(users);
         }
 
-
         [HttpGet]
         public async Task<IActionResult> VerifyEmail(string token)
         {
@@ -45,6 +44,7 @@ namespace Task_5_webApp.Controllers
 
             user.IsEmailVerified = true;
             user.Status = "active";   // active after verification
+            user.VerificationToken = "" ; // clear token
             await _db.SaveChangesAsync();
 
             TempData["Success"] = "Your email has been verified. Account is now active.";

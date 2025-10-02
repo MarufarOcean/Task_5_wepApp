@@ -20,8 +20,8 @@ namespace Task_5_webApp.Services
 
             //configure SMTP for testing (e.g., Gmail SMTP or local)
             using var client = new SmtpClient();
-            await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync("yourgmail@gmail.com", "app_password");
+            await client.ConnectAsync("sandbox.smtp.mailtrap.io", 587, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync("e49597f4f06e58", "90c5dfae8192aa");
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
         }

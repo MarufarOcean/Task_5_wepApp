@@ -38,7 +38,9 @@ namespace Task_5_webApp.Controllers
                 Designation = desgntn,
                 Email = email,
                 PasswordHash = PasswordHasher.Hash(password),
-                Status = "unverified"
+                Status = "unverified",
+                IsEmailVerified = false,
+                VerificationToken = Guid.NewGuid().ToString()
             };
 
             try
@@ -48,8 +50,15 @@ namespace Task_5_webApp.Controllers
 
                 TempData["Success"] = "Registered successfully. Please check your email to confirm.";
                 // IMPORTANT: send email asynchronously
-                var confirmUrl = Url.Action("Confirm", "Account", new { email = user.Email }, Request.Scheme)!;
-                _ = _email.SendConfirmationAsync(user.Email, confirmUrl);
+                //var confirmUrl = Url.Action("Confirm", "Account", new { email = user.Email }, Request.Scheme)!;
+                //_ = _email.SendConfirmationAsync(user.Email, confirmUrl);
+
+                // Build verification link
+                string link = Url.Action("VerifyEmail", "Users", new { token = user.VerificationToken }, Request.Scheme);
+
+                // Hand off to your email handler
+                await _email.SendConfirmationAsync(user.Email, link);
+
 
                 return RedirectToAction("Login");
             }
@@ -77,6 +86,8 @@ namespace Task_5_webApp.Controllers
             return RedirectToAction("Login");
         }
 
+        
+
         [HttpGet]
         public IActionResult Login() => View();
 
@@ -99,11 +110,11 @@ namespace Task_5_webApp.Controllers
                 TempData["Error"] = "Invalid credentials.";
                 return View();
             }
-            //if (!user.IsEmailVerified)
-            //{
-            //    TempData["Error"] = "Please verify your email before logging in.";
-            //    return View();
-            //}
+            if (!user.IsEmailVerified)
+            {
+                TempData["Error"] = "Please verify your email before logging in.";
+                return View();
+            }
 
             user.LastLoginTime = DateTime.UtcNow;
             await _db.SaveChangesAsync();
