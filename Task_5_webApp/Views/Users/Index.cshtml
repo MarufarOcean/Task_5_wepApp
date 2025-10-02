@@ -3,7 +3,7 @@
 @functions {
     public string GetRelativeTime(DateTime dt)
     {
-        var span = DateTime.UtcNow - dt.ToUniversalTime();
+        var span = DateTime.Now - dt.ToUniversalTime();
         if (span.TotalSeconds < 60)
             return $"{(int)span.TotalSeconds} seconds ago";
         if (span.TotalMinutes < 60)

@@ -12,13 +12,18 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
                 <a class="navbar-brand" href="/">User Admin app</a>
-                <div class="d-flex">
+                <div class="d-flex align-items-center gap-2">
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
+                        <span class="text-light fw-semibold">
+                            <i class="bi bi-person-circle me-1"></i>
+                            @User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                        </span>
                         <form method="post" asp-controller="Account" asp-action="Logout">
-                            <button class="btn btn-outline-light">Logout</button>
+                            <button class="btn btn-outline-light"> <i class="bi bi-box-arrow-right"></i> Logout</button>
                         </form>
                     }
+
                     @* else
                     {
                         <a class="btn btn-outline-light" asp-controller="Account" asp-action="Login">Login</a>

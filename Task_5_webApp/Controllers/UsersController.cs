@@ -100,6 +100,12 @@ namespace Task_5_webApp.Controllers
             //hard delete (not a flag)
             _db.Users.RemoveRange(set);
             await _db.SaveChangesAsync();
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (ids.Contains(currentUserId))
+            {
+                await _logoutService.SignOutAsync(HttpContext);
+                return RedirectToAction("Login", "Account");
+            }
             TempData["Success"] = "Selected users deleted.";
             return RedirectToAction("Index");
         }
