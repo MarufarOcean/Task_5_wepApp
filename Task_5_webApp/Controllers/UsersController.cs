@@ -29,8 +29,8 @@ namespace Task_5_webApp.Controllers
             // Sorting logic
             q = sort switch
             {
-                "name_asc" => q.OrderBy(u => u.Name),
-                "name_desc" => q.OrderByDescending(u => u.Name),
+                "name_asc" => q.OrderBy(u => u.LastName),
+                "name_desc" => q.OrderByDescending(u => u.LastName),
                 "email_asc" => q.OrderBy(u => u.Email),
                 "email_desc" => q.OrderByDescending(u => u.Email),
                 "lastlogin_asc" => q.OrderBy(u => u.LastLoginTime ?? DateTime.MinValue),
@@ -50,7 +50,7 @@ namespace Task_5_webApp.Controllers
             if (user == null) return NotFound();
 
             user.IsEmailVerified = true;
-            user.Status = "active";   // active after verification
+            user.Status = "Active";   // active after verification
             user.VerificationToken = "" ; // clear token
             await _db.SaveChangesAsync();
 
@@ -62,7 +62,7 @@ namespace Task_5_webApp.Controllers
         public async Task<IActionResult> Block([FromForm] int[] ids)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
-            foreach (var u in set) u.Status = "blocked";
+            foreach (var u in set) u.Status = "Blocked";
             await _db.SaveChangesAsync();
             // If current user blocked then sign out
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -72,7 +72,7 @@ namespace Task_5_webApp.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            TempData["Success"] = "Selected users blocked.";
+            TempData["Success"] = "Blocked successfully.";
             return RedirectToAction("Index");
 
         }
@@ -83,13 +83,13 @@ namespace Task_5_webApp.Controllers
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
             foreach (var u in set)
             {
-                if (u.Status == "blocked")
+                if (u.Status == "Blocked")
                 {
-                    u.Status = u.IsEmailVerified ? "active" : "unverified";
+                    u.Status = u.IsEmailVerified ? "Active" : "Unverified";
                 }
             }
             await _db.SaveChangesAsync();
-            TempData["Success"] = "Selected users unblocked.";
+            TempData["Success"] = "Unblocked successfully.";
             return RedirectToAction("Index");
         }
 
@@ -113,7 +113,7 @@ namespace Task_5_webApp.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteUnverified()
         {
-            var set = await _db.Users.Where(u => u.Status == "unverified").ToListAsync();
+            var set = await _db.Users.Where(u => u.Status == "Unverified").ToListAsync();
             _db.Users.RemoveRange(set);
             await _db.SaveChangesAsync();
             TempData["Success"] = "All unverified users deleted.";

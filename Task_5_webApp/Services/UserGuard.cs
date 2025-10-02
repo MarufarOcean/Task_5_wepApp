@@ -19,7 +19,7 @@ namespace Task_5_webApp.Services
 
             var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) return false;
-            if (user.Status == "blocked") return false;
+            if (user.Status == "Blocked") return false;
 
             return true;
         }

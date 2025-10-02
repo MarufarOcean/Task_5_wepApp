@@ -25,7 +25,7 @@ namespace Task_5_webApp.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(string name, string desgntn, string email, string password)
+        public async Task<IActionResult> Register(string fname, string lname, string desgntn, string email, string password)
         {
             if (string.IsNullOrWhiteSpace(password))
             {
@@ -35,11 +35,12 @@ namespace Task_5_webApp.Controllers
 
             var user = new User
             {
-                Name = name,
+                FirstName = fname,
+                LastName = lname,
                 Designation = desgntn,
                 Email = email,
                 PasswordHash = PasswordHasher.Hash(password),
-                Status = "unverified",
+                Status = "Unverified",
                 IsEmailVerified = false,
                 VerificationToken = Guid.NewGuid().ToString()
             };
@@ -80,7 +81,7 @@ namespace Task_5_webApp.Controllers
                 TempData["Error"] = "Invalid confirmation link.";
                 return RedirectToAction("Login");
             }
-            if (user.Status != "blocked") user.Status = "active"; // blocked stays blocked
+            if (user.Status != "Blocked") user.Status = "Active"; // blocked stays blocked
             await _db.SaveChangesAsync();
 
             TempData["Success"] = "Email confirmed. You can now log in.";
@@ -101,7 +102,7 @@ namespace Task_5_webApp.Controllers
                 TempData["Error"] = "Invalid credentials.";
                 return View();
             }
-            if (user.Status == "blocked")
+            if (user.Status == "Blocked")
             {
                 TempData["Error"] = "Your account is blocked.";
                 return View();
@@ -117,13 +118,14 @@ namespace Task_5_webApp.Controllers
             //    return View();
             //}
 
-            user.LastLoginTime = DateTime.UtcNow;
+            user.LastLoginTime = DateTime.Now;
             await _db.SaveChangesAsync();
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
+                new Claim("FirstName", user.FirstName),
+                new Claim("LastName", user.LastName),
                 new Claim(ClaimTypes.Email, user.Email)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

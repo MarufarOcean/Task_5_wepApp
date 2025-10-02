@@ -3,7 +3,7 @@
 @functions {
     public string GetRelativeTime(DateTime dt)
     {
-        var span = DateTime.Now - dt.ToUniversalTime();
+        var span = DateTime.Now - DateTime.Now;
         if (span.TotalSeconds < 60)
             return $"{(int)span.TotalSeconds} seconds ago";
         if (span.TotalMinutes < 60)
@@ -80,18 +80,18 @@
     <tbody>
         @foreach (var u in Model)
         {
-            var isBlocked = u.Status == "blocked";
+            var isBlocked = u.Status == "Blocked";
             <tr class="@(isBlocked ? "opacity-50" : "")">
                 <td>
                     <input type="checkbox" class="rowchk" value="@u.Id" />
                 </td>
                 <td class="@(isBlocked ? "text-decoration-line-through" : "")">
-                    <div>@u.Name</div>
+                    <div>@u.LastName, @u.FirstName</div>
                     <div class="text-muted small">@u.Designation</div>
                 </td>
                 <td>@u.Email</td>
                 <td>
-                    <span class="badge bg-@(u.Status == "active" ? "success" : u.Status == "blocked" ? "danger" : "secondary")">@u.Status</span>
+                    <span>@u.Status</span>
                 </td>
                 @{
                     var lastSeen = u.LastLoginTime;
@@ -126,11 +126,11 @@
                 btnUnblock.disabled = true;
 
                 // Determine status of selected users
-                const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4) .badge").textContent.trim());
+                const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4)").textContent.trim());
 
                 if (selectedStatuses.length > 0) {
-                    const allBlocked = selectedStatuses.every(s => s === "blocked");
-                    const allUnblocked = selectedStatuses.every(s => s !== "blocked");
+                    const allBlocked = selectedStatuses.every(s => s === "Blocked");
+                    const allUnblocked = selectedStatuses.every(s => s !== "Blocked");
 
                     btnBlock.disabled = !allUnblocked;
                     btnUnblock.disabled = !allBlocked;

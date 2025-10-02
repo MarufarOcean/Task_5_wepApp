@@ -12,8 +12,8 @@ using Task_5_webApp.Data;
 namespace Task_5_webApp.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251001054218_AddedEmailVerification")]
-    partial class AddedEmailVerification
+    [Migration("20251002165824_updatedTimeZone")]
+    partial class updatedTimeZone
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,13 +45,17 @@ namespace Task_5_webApp.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -60,6 +64,10 @@ namespace Task_5_webApp.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VerificationToken")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
