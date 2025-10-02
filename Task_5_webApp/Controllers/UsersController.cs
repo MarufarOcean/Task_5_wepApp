@@ -2,16 +2,23 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Security.Claims;
 using Task_5_webApp.Data;
+using Task_5_webApp.Services;
 
 namespace Task_5_webApp.Controllers
 {
-    [Authorize(AuthenticationSchemes = "cookie")]
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly AppDBContext _db;
+        private readonly ILogoutService _logoutService;
 
-        public UsersController(AppDBContext db) { _db = db; }
+        public UsersController(AppDBContext db, ILogoutService logoutService) 
+        { 
+            _db = db;
+            _logoutService = logoutService;
+        }
 
 
         [HttpGet]
@@ -57,8 +64,17 @@ namespace Task_5_webApp.Controllers
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
             foreach (var u in set) u.Status = "blocked";
             await _db.SaveChangesAsync();
+            // If current user blocked then sign out
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (ids.Contains(currentUserId))
+            {
+                await _logoutService.SignOutAsync(HttpContext);
+                return RedirectToAction("Login", "Account");
+            }
+
             TempData["Success"] = "Selected users blocked.";
             return RedirectToAction("Index");
+
         }
 
         [HttpPost]

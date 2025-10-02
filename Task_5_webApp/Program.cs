@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Task_5_webApp.Data;
 using Task_5_webApp.Services;
@@ -12,16 +13,19 @@ builder.Services.AddDbContext<AppDBContext>(opts =>
 builder.Services.AddControllersWithViews();
 
 // IMPORTANT: Cookie auth (simple) to allow one-char passwords, not using Identity policies
-builder.Services.AddAuthentication("cookie")
-    .AddCookie("cookie", opts =>
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        opts.LoginPath = "/Account/Login";
-        opts.LogoutPath = "/Account/Logout";
-        opts.AccessDeniedPath = "/Account/Login";
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.SlidingExpiration = true;
     });
 
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IUserGuard, UserGuard>();
+builder.Services.AddScoped<ILogoutService, LogoutService>();
+
 
 
 

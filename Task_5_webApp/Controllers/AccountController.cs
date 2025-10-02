@@ -13,11 +13,12 @@ namespace Task_5_webApp.Controllers
     {
         private readonly AppDBContext _db;
         private readonly IEmailService _email;
-
-        public AccountController(AppDBContext db, IEmailService email)
+        private readonly ILogoutService _logoutService;
+        public AccountController(AppDBContext db, IEmailService email, ILogoutService logoutService)
         {
             _db = db;
             _email = email;
+            _logoutService = logoutService;
         }
 
         [HttpGet]
@@ -125,8 +126,8 @@ namespace Task_5_webApp.Controllers
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email)
             };
-            var identity = new ClaimsIdentity(claims, "cookie");
-            await HttpContext.SignInAsync("cookie", new ClaimsPrincipal(identity));
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
             return RedirectToAction("Index", "Users");
         }
@@ -134,7 +135,7 @@ namespace Task_5_webApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("cookie");
+            await _logoutService.SignOutAsync(HttpContext);
             return RedirectToAction("Login");
         }
 
