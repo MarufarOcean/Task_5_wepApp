@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -88,7 +89,7 @@ namespace Task_5_webApp.Controllers
             return RedirectToAction("Login");
         }
 
-        
+        //Login
 
         [HttpGet]
         public IActionResult Login() => View();
@@ -139,6 +140,113 @@ namespace Task_5_webApp.Controllers
 
             return RedirectToAction("Index", "Users");
         }
+
+        //Forgot Password
+
+        [HttpGet]
+        public IActionResult ForgotPassword() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData["Error"] = "Please enter your email address.";
+                return View();
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                // Don't reveal that the user doesn't exist
+                TempData["Success"] = "If your email is registered, you will receive a password reset link.";
+                return RedirectToAction("Login");
+            }
+
+            if (user.Status == "Blocked")
+            {
+                TempData["Error"] = "Your account is blocked. Please contact support.";
+                return View();
+            }
+
+            // Generate reset token
+            user.PasswordResetToken = Guid.NewGuid().ToString();
+            user.ResetTokenExpires = DateTime.UtcNow.AddHours(24);
+            await _db.SaveChangesAsync();
+
+            // Send reset email
+            var resetLink = Url.Action("ResetPassword", "Account", new { token = user.PasswordResetToken }, Request.Scheme);
+            await _email.SendPasswordResetAsync(user.Email, resetLink!);
+
+            TempData["Success"] = "If your email is registered, you will receive a password reset link.";
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Invalid reset token.";
+                return RedirectToAction("Login");
+            }
+
+            ViewBag.Token = token;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string token, string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Invalid reset token.";
+                return RedirectToAction("Login");
+            }
+
+            if (string.IsNullOrEmpty(newPassword))
+            {
+                TempData["Error"] = "Password is required.";
+                ViewBag.Token = token;
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                TempData["Error"] = "Passwords do not match.";
+                ViewBag.Token = token;
+                return View();
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u =>
+                u.PasswordResetToken == token &&
+                u.ResetTokenExpires > DateTime.UtcNow);
+
+            if (user == null)
+            {
+                TempData["Error"] = "Invalid or expired reset token.";
+                return RedirectToAction("Login");
+            }
+
+            if (user.Status == "Blocked")
+            {
+                TempData["Error"] = "Your account is blocked. Please contact support.";
+                ViewBag.Token = token;
+                return View();
+            }
+
+            // Update password
+            user.PasswordHash = PasswordHasher.Hash(newPassword);
+            user.PasswordResetToken = null;
+            user.ResetTokenExpires = null;
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Password reset successfully. You can now login with your new password.";
+            return RedirectToAction("Login");
+        }
+
+
+        //Logout
 
         [HttpPost]
         public async Task<IActionResult> Logout()

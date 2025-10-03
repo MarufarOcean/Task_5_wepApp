@@ -52,7 +52,11 @@ app.Use(async (ctx, next) =>
 {
     var path = ctx.Request.Path.Value?.ToLower() ?? "";
     // IMPORTANT: allow authentication endpoints without user/blocked checks
-    if (path.StartsWith("/account/login") || path.StartsWith("/account/register") || path.StartsWith("/account/confirm"))
+    if (path.StartsWith("/account/login") || 
+        path.StartsWith("/account/register") || 
+        path.StartsWith("/account/confirm") ||
+        path.StartsWith("/account/forgotpassword") ||
+        path.StartsWith("/account/resetpassword"))
     {
         await next();
         return;

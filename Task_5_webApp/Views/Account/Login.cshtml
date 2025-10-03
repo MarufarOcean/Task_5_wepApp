@@ -18,8 +18,9 @@
         <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
         <label for="password" class="opacity-50">Password</label>
         <button type="button" class="btn btn-sm btn-link text-muted position-absolute top-50 end-0 translate-middle-y me-2"
-                id="togglePassword" tabindex="-1">
-            <i class="fa-solid fa-eye opacity-50 "></i>
+                data-password-toggle="true" data-password-target="password"
+                title="Show password" tabindex="-1">
+            <i class="fa-solid fa-eye opacity-50"></i>
         </button>
     </div>
 
@@ -34,8 +35,9 @@
 
 <div class="mt-3 d-flex justify-content-between">
     <span>Don't have an account? <a href="/Account/Register">Sign up</a></span>
-    <a href="#">Forgot password?</a>
+    <a href="/Account/ForgotPassword">Forgot password?</a>
 </div>
+
 
 
 

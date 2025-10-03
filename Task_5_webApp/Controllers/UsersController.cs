@@ -21,7 +21,7 @@ namespace Task_5_webApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "", int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "", int page = 1, int pageSize = 10, string selectedIds = "")
         {
             var q = _db.Users.AsNoTracking();
 
@@ -64,6 +64,7 @@ namespace Task_5_webApp.Controllers
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = totalPages;
+            ViewBag.SelectedIds = selectedIds;
 
             return View(users);
         }

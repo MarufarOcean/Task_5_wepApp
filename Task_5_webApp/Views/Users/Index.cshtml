@@ -53,7 +53,7 @@
     };
 }
 
-<h2 class="mb-4">User Management</h2>
+<h2 class="mb-4">User List</h2>
 
 <!-- Toolbar + Search -->
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 bg-light">
@@ -62,24 +62,25 @@
         @* For staying same page and same page size *@
         <input type="hidden" name="pageSize" value="@pageSizeValue" />
         <input type="hidden" name="page" value="@currentPage" />
+        <input type="hidden" id="selectedIds" name="selectedIds" value="" />
         
-        <button formaction="/Users/Block" class="btn btn-outline-danger" id="btnBlock" disabled>
+        <button formaction="/Users/Block" class="btn btn-outline-primary border-2" id="btnBlock" disabled>
             <i class="fa-solid fa-lock"></i> Block
         </button>
-        <button formaction="/Users/Unblock" class="btn btn-outline-success" id="btnUnblock" disabled title="Unblock selected">
-            <i class="fa-solid fa-unlock"></i> Unblock
+        <button formaction="/Users/Unblock" class="btn btn-outline-primary border-2" id="btnUnblock" disabled title="Unblock selected">
+            <i class="fa-solid fa-lock-open"></i>
         </button>
-        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete" disabled title="Delete selected">
-            <i class="fa-solid fa-trash"></i> Delete
+        <button formaction="/Users/Delete" class="btn btn-outline-danger border-2" id="btnDelete" disabled title="Delete selected">
+            <i class="fa-solid fa-trash"></i>
         </button>
-        <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
+        @* <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
             <i class="fa-solid fa-person-circle-xmark"></i> Delete unverified
-        </button>
+        </button> *@
     </form>
 
     <!-- Search -->
     <div class="d-flex">
-        <input type="text" id="searchInput" class="form-control text-opacity-50" placeholder="Filter by name or email" value="@ViewBag.Search" />
+        <input type="text" id="searchInput" class="form-control text-opacity-50 border-2" placeholder="Filter by name or email" value="@ViewBag.Search" />
         <input type="hidden" id="sortValue" value="@ViewBag.Sort" />
     </div>
 </div>
@@ -111,46 +112,59 @@
 </div>
 
 <!-- User table -->
-<table class="table table-striped table-hover align-middle">
-    <thead class="table-light">
-        <tr>
-            <th style="width:40px;">
-                <input type="checkbox" id="chkAll" />
-            </th>
-            <th>@Html.Raw(sortLink("name"))</th>
-            <th>@Html.Raw(sortLink("email"))</th>
-            <th>Status</th>
-            <th>@Html.Raw(sortLink("lastlogin").Replace("Last login", "Last seen"))</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var u in Model)
-        {
-            var isBlocked = u.Status == "Blocked";
-            <tr class="@(isBlocked ? "opacity-50" : "")">
-                <td>
-                    <input type="checkbox" class="rowchk" value="@u.Id" />
-                </td>
-                <td class="@(isBlocked ? "text-decoration-line-through" : "")">
-                    <div>@u.LastName, @u.FirstName</div>
-                    <div class="text-muted small">
-                        @(string.IsNullOrWhiteSpace(u.Designation) || u.Designation == "" ? "N/A" : u.Designation)
-                    </div>
-                </td>
-                <td>@u.Email</td>
-                <td>
-                    <span>@u.Status</span>
-                </td>
-                @{
-                    var lastSeen = u.LastLoginTime;
-                    string tooltip = lastSeen?.ToString("f") ?? "Never logged in";
-                    string relative = lastSeen == null ? "-" : GetRelativeTime(lastSeen.Value);
-                }
-                <td data-bs-toggle="tooltip" title="@tooltip" style="cursor: pointer;">@relative</td>
+@if (Model.Any())
+{
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:40px;">
+                    <input type="checkbox" id="chkAll" />
+                </th>
+                <th>@Html.Raw(sortLink("name"))</th>
+                <th>@Html.Raw(sortLink("email"))</th>
+                <th>Status</th>
+                <th>@Html.Raw(sortLink("lastlogin").Replace("Last login", "Last seen"))</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                var isBlocked = u.Status == "Blocked";
+                <tr class="@(isBlocked ? "opacity-50" : "")">
+                    <td>
+                        <input type="checkbox" class="rowchk" value="@u.Id" />
+                    </td>
+                    <td class="@(isBlocked ? "text-decoration-line-through" : "")">
+                        <div>@u.LastName, @u.FirstName</div>
+                        <div class="text-muted small">
+                            @(string.IsNullOrWhiteSpace(u.Designation) || u.Designation == "" ? "N/A" : u.Designation)
+                        </div>
+                    </td>
+                    <td>@u.Email</td>
+                    <td>
+                        <span>@u.Status</span>
+                    </td>
+                    @{
+                        var lastSeen = u.LastLoginTime;
+                        string tooltip = lastSeen?.ToString("f") ?? "Never logged in";
+                        string relative = lastSeen == null ? "-" : GetRelativeTime(lastSeen.Value);
+                    }
+                    <td data-bs-toggle="tooltip" title="@tooltip" style="cursor: pointer;">@relative</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="text-center py-5">
+        <div class="text-muted">
+            <i class="fa-solid fa-search fa-2x mb-3 opacity-50"></i>
+            <h5>No users found</h5>
+            <p class="mb-0">@(!string.IsNullOrEmpty(search) ? "Try adjusting your search terms" : "No users available")</p>
+        </div>
+    </div>
+}
 
 <!-- Pagination -->
 @if (totalPages > 1)
@@ -235,104 +249,221 @@
 
 @section Scripts {
     <script>
-        // Your existing checkbox code here (keep it as is)
+        // Safe initialization with null checks
         const chkAll = document.getElementById('chkAll');
-        const rowChks = Array.from(document.querySelectorAll('.rowchk'));
+        const rowChks = document.querySelectorAll('.rowchk');
         const toolbarForm = document.getElementById('toolbarForm');
-        const btns = ['btnBlock', 'btnUnblock', 'btnDelete'].map(id => document.getElementById(id));
+        const selectedIdsInput = document.getElementById('selectedIds');
+        const searchInput = document.getElementById('searchInput');
+        const sortValue = document.getElementById('sortValue');
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
 
-        function refreshToolbar() {
-            const total = rowChks.length;
-            const checkedRows = rowChks.filter(c => c.checked);
-            const checked = checkedRows.length;
+        // Only initialize table functionality if table exists
+        if (toolbarForm && selectedIdsInput) {
+            // Get button references safely
+            const btnBlock = document.getElementById('btnBlock');
+            const btnUnblock = document.getElementById('btnUnblock');
+            const btnDelete = document.getElementById('btnDelete');
 
-            chkAll.indeterminate = checked > 0 && checked < total;
-            chkAll.checked = checked === total;
-
-            // Reset buttons
-            btnBlock.disabled = true;
-            btnUnblock.disabled = true;
-            btnDelete.disabled = true;
-
-            // Determine status of selected users
-            const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4)").textContent.trim());
-
-            if (selectedStatuses.length > 0) {
-                const allBlocked = selectedStatuses.every(s => s === "Blocked");
-                const allUnblocked = selectedStatuses.every(s => s !== "Blocked");
-
-                btnBlock.disabled = !allUnblocked;
-                btnUnblock.disabled = !allBlocked;
-                btnDelete.disabled = false;
+            // Get previously selected IDs from URL or hidden field
+            function getSelectedIds() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const idsParam = urlParams.get('selectedIds');
+                return idsParam ? idsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) : [];
             }
 
-            // Sync selected IDs
-            toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
-            checkedRows.forEach(c => {
-                const hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = 'ids';
-                hidden.value = c.value;
-                toolbarForm.appendChild(hidden);
+            // Restore checkbox states on page load
+            function restoreCheckboxStates() {
+                if (rowChks.length === 0) return;
+
+                const selectedIds = getSelectedIds();
+                rowChks.forEach(checkbox => {
+                    const userId = parseInt(checkbox.value);
+                    checkbox.checked = selectedIds.includes(userId);
+                });
+                refreshToolbar();
+            }
+
+            function refreshToolbar() {
+                const total = rowChks.length;
+                const checkedRows = Array.from(rowChks).filter(c => c.checked);
+                const checked = checkedRows.length;
+
+                // Only update chkAll if it exists
+                if (chkAll) {
+                    chkAll.indeterminate = checked > 0 && checked < total;
+                    chkAll.checked = checked === total;
+                }
+
+                // Reset buttons safely
+                if (btnBlock) btnBlock.disabled = true;
+                if (btnUnblock) btnUnblock.disabled = true;
+                if (btnDelete) btnDelete.disabled = true;
+
+                // Determine status of selected users
+                const selectedStatuses = checkedRows.map(c => {
+                    const statusCell = c.closest("tr")?.querySelector("td:nth-child(4)");
+                    return statusCell ? statusCell.textContent.trim() : "";
+                }).filter(status => status !== "");
+
+                if (selectedStatuses.length > 0) {
+                    const allBlocked = selectedStatuses.every(s => s === "Blocked");
+                    const allUnblocked = selectedStatuses.every(s => s !== "Blocked");
+
+                    if (btnBlock) btnBlock.disabled = !allUnblocked;
+                    if (btnUnblock) btnUnblock.disabled = !allBlocked;
+                    if (btnDelete) btnDelete.disabled = false;
+                }
+
+                // Update selected IDs in hidden field
+                const selectedIds = checkedRows.map(c => c.value).join(',');
+                selectedIdsInput.value = selectedIds;
+
+                // Sync selected IDs for form submission
+                toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
+                checkedRows.forEach(c => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'ids';
+                    hidden.value = c.value;
+                    toolbarForm.appendChild(hidden);
+                });
+            }
+
+            // Modified sort links to preserve selected IDs
+            function updateSortLinks() {
+                const sortLinks = document.querySelectorAll('thead a[href*="sort="]');
+                const selectedIds = Array.from(document.querySelectorAll('.rowchk:checked'))
+                    .map(cb => cb.value)
+                    .join(',');
+
+                sortLinks.forEach(link => {
+                    const url = new URL(link.href);
+                    if (selectedIds) {
+                        url.searchParams.set('selectedIds', selectedIds);
+                    }
+                    link.href = url.toString();
+                });
+            }
+
+            // Add event listeners only if elements exist
+            if (chkAll) {
+                chkAll.addEventListener('change', () => {
+                    rowChks.forEach(c => c.checked = chkAll.checked);
+                    refreshToolbar();
+                    updateSortLinks();
+                });
+            }
+
+            // Add event listeners to row checkboxes
+            rowChks.forEach(c => {
+                c.addEventListener('change', () => {
+                    refreshToolbar();
+                    updateSortLinks();
+                });
+            });
+
+            // Initialize table functionality
+            restoreCheckboxStates();
+            updateSortLinks();
+        }
+
+        // Tooltip initialization (safe)
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        if (tooltipTriggerList.length > 0) {
+            tooltipTriggerList.forEach(tooltipTriggerEl => {
+                new bootstrap.Tooltip(tooltipTriggerEl);
             });
         }
 
-        chkAll.addEventListener('change', () => {
-            rowChks.forEach(c => c.checked = chkAll.checked);
-            refreshToolbar();
-        });
+        // Search functionality (safe)
+        if (searchInput && sortValue) {
+            let searchTimeout = null;
 
-        rowChks.forEach(c => c.addEventListener('change', refreshToolbar));
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
 
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = this.value;
+                    const params = new URLSearchParams();
 
-        // SIMPLE TYPING SEARCH - This will work
-        const searchInput = document.getElementById('searchInput');
-        const sortValue = document.getElementById('sortValue');
-        let searchTimeout = null;
+                    if (searchTerm) {
+                        params.append('search', searchTerm);
+                    }
 
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
+                    if (sortValue.value) {
+                        params.append('sort', sortValue.value);
+                    }
 
-            searchTimeout = setTimeout(() => {
-                const searchTerm = this.value;
-                const params = new URLSearchParams();
+                    // Preserve page size and selected IDs
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentPageSize = urlParams.get('pageSize');
+                    const selectedIds = urlParams.get('selectedIds');
 
-                if (searchTerm) {
-                    params.append('search', searchTerm);
+                    if (currentPageSize) {
+                        params.append('pageSize', currentPageSize);
+                    }
+                    if (selectedIds) {
+                        params.append('selectedIds', selectedIds);
+                    }
+
+                    // Reset to page 1 when searching
+                    params.append('page', '1');
+
+                    // Simple page reload with search parameters
+                    window.location.href = '?' + params.toString();
+                }, 800);
+            });
+        }
+
+        // Page size change handler (safe)
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', function() {
+                const newPageSize = this.value;
+                const params = new URLSearchParams(window.location.search);
+
+                params.set('pageSize', newPageSize);
+                params.set('page', '1');
+
+                // Preserve selected IDs
+                const selectedIds = Array.from(document.querySelectorAll('.rowchk:checked'))
+                    .map(cb => cb.value)
+                    .join(',');
+                if (selectedIds) {
+                    params.set('selectedIds', selectedIds);
                 }
 
-                if (sortValue.value) {
-                    params.append('sort', sortValue.value);
-                }
-
-                // Preserve page size
-                const urlParams = new URLSearchParams(window.location.search);
-                const currentPageSize = urlParams.get('pageSize');
-                if (currentPageSize) {
-                    params.append('pageSize', currentPageSize);
-                }
-
-                // Reset to page 1 when searching
-                params.append('page', '1');
-
-                // Simple page reload with search parameters
                 window.location.href = '?' + params.toString();
-            }, 800); // Wait 800ms after typing stops
-        });
+            });
+        }
 
-        // Page size change handler
-        document.getElementById('pageSizeSelect')?.addEventListener('change', function() {
-            const newPageSize = this.value;
-            const params = new URLSearchParams(window.location.search);
+        // Update pagination links to preserve selected IDs
+        function updatePaginationLinks() {
+            const paginationLinks = document.querySelectorAll('.pagination a[href*="page="]');
+            const selectedIds = Array.from(document.querySelectorAll('.rowchk:checked'))
+                .map(cb => cb.value)
+                .join(',');
 
-            params.set('pageSize', newPageSize);
-            params.set('page', '1'); // Reset to first page when changing page size
+            paginationLinks.forEach(link => {
+                const url = new URL(link.href);
+                if (selectedIds) {
+                    url.searchParams.set('selectedIds', selectedIds);
+                }
+                link.href = url.toString();
+            });
+        }
 
-            window.location.href = '?' + params.toString();
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize pagination links
+            updatePaginationLinks();
+
+            // Set focus to search input and move cursor to end
+            if (searchInput) {
+                searchInput.focus();
+                const length = searchInput.value.length;
+                searchInput.setSelectionRange(length, length);
+            }
         });
     </script>
 }

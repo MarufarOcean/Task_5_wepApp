@@ -21,17 +21,31 @@
 <!--Password reveal/hide feature-->
 
 <script>
-    document.getElementById("togglePassword").addEventListener("click", function () {
-        const pwd = document.getElementById("password");
-    const icon = this.querySelector("i");
-    if (pwd.type === "password") {
-        pwd.type = "text";
-    icon.classList.remove("fa-eye");
-    icon.classList.add("fa-eye-slash");
-        } else {
-        pwd.type = "password";
-    icon.classList.remove("fa-eye-slash");
-    icon.classList.add("fa-eye");
-        }
+    // Safe password toggle - works for multiple password fields
+    document.addEventListener("DOMContentLoaded", function() {
+        // Find all password toggle buttons on the page
+        const toggleButtons = document.querySelectorAll('[data-password-toggle]');
+
+        toggleButtons.forEach(button => {
+            const targetId = button.getAttribute('data-password-target');
+            const passwordInput = document.getElementById(targetId);
+
+            if (passwordInput) {
+                button.addEventListener("click", function () {
+                    const icon = this.querySelector("i");
+                    if (passwordInput.type === "password") {
+                        passwordInput.type = "text";
+                        icon.classList.remove("fa-eye");
+                        icon.classList.add("fa-eye-slash");
+                        button.setAttribute('title', 'Hide password');
+                    } else {
+                        passwordInput.type = "password";
+                        icon.classList.remove("fa-eye-slash");
+                        icon.classList.add("fa-eye");
+                        button.setAttribute('title', 'Show password');
+                    }
+                });
+            }
+        });
     });
 </script>
