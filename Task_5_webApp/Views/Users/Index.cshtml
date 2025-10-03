@@ -16,11 +16,18 @@
             return $"{(int)(span.TotalDays / 7)} weeks ago";
         return dt.ToString("dd-MMM-yyyy");
     }
-}   
+}
 
 @{
     Layout = "_Layout";
     string sort = Context.Request.Query["sort"];
+    string search = Context.Request.Query["search"];
+    string pageSize = Context.Request.Query["pageSize"];
+    int currentPage = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int pageSizeValue = ViewBag.PageSize ?? 10;
+
     Func<string, string> sortLink = col =>
     {
         bool isAsc = sort == $"{col}_asc";
@@ -34,7 +41,15 @@
             "lastlogin" => "Last login",
             _ => col
         };
-        return $"<a href=\"?sort={next}\" class=\"text-decoration-none text-dark\">{label} {arrow}</a>";
+
+        var queryParams = new Dictionary<string, string>
+        {
+            ["sort"] = next,
+            ["search"] = search,
+            ["pageSize"] = pageSizeValue.ToString()
+        };
+        var queryString = string.Join("&", queryParams.Where(x => !string.IsNullOrEmpty(x.Value)).Select(x => $"{x.Key}={x.Value}"));
+        return $"<a href=\"?{queryString}\" class=\"text-decoration-none text-dark\">{label} {arrow}</a>";
     };
 }
 
@@ -50,7 +65,7 @@
         <button formaction="/Users/Unblock" class="btn btn-outline-success" id="btnUnblock" disabled title="Unblock selected">
             <i class="fa-solid fa-unlock"></i> Unblock
         </button>
-        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete"  disabled title="Delete selected">
+        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete" disabled title="Delete selected">
             <i class="fa-solid fa-trash"></i> Delete
         </button>
         <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
@@ -58,13 +73,37 @@
         </button>
     </form>
 
-    <!-- Filter aligned right -->
     <!-- Search -->
     <div class="d-flex">
         <input type="text" id="searchInput" class="form-control text-opacity-50" placeholder="Filter" value="@ViewBag.Search" />
         <input type="hidden" id="sortValue" value="@ViewBag.Sort" />
     </div>
+</div>
 
+<!-- Results info and page size selector -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="text-muted">
+        @if (totalCount > 0)
+        {
+            var startItem = (currentPage - 1) * pageSizeValue + 1;
+            var endItem = Math.Min(currentPage * pageSizeValue, totalCount);
+            <span>Showing @startItem to @endItem of @totalCount users</span>
+        }
+        else
+        {
+            <span>No users found</span>
+        }
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <label for="pageSizeSelect" class="form-label mb-0 small">Users per page:</label>
+        <select class="form-select form-select-sm" id="pageSizeSelect" style="width: auto;">
+            <option value="5" selected="@(pageSizeValue == 5)">5</option>
+            <option value="10" selected="@(pageSizeValue == 10)">10</option>
+            <option value="20" selected="@(pageSizeValue == 20)">20</option>
+            <option value="50" selected="@(pageSizeValue == 50)">50</option>
+        </select>
+    </div>
 </div>
 
 <!-- User table -->
@@ -102,11 +141,91 @@
                     string relative = lastSeen == null ? "-" : GetRelativeTime(lastSeen.Value);
                 }
                 <td data-bs-toggle="tooltip" title="@tooltip" style="cursor: pointer;">@relative</td>
-
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Pagination -->
+@if (totalPages > 1)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            @{
+                // Previous page
+                var prevDisabled = currentPage == 1 ? "disabled" : "";
+                <li class="page-item @prevDisabled">
+                    @if (currentPage > 1)
+                    {
+                        <a class="page-link" href="?page=@(currentPage - 1)&search=@search&sort=@sort&pageSize=@pageSizeValue" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    }
+                </li>
+
+                // Page numbers
+                int startPage = Math.Max(1, currentPage - 2);
+                int endPage = Math.Min(totalPages, currentPage + 2);
+
+                // Show first page and ellipsis if needed
+                if (startPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&search=@search&sort=@sort&pageSize=@pageSizeValue">1</a>
+                    </li>
+                    if (startPage > 2)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+                }
+
+                // Page numbers
+                for (int i = startPage; i <= endPage; i++)
+                {
+                    var active = i == currentPage ? "active" : "";
+                    <li class="page-item @active">
+                        <a class="page-link" href="?page=@i&search=@search&sort=@sort&pageSize=@pageSizeValue">@i</a>
+                    </li>
+                }
+
+                // Show last page and ellipsis if needed
+                if (endPage < totalPages)
+                {
+                    if (endPage < totalPages - 1)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+                    <li class="page-item">
+                        <a class="page-link" href="?page=@totalPages&search=@search&sort=@sort&pageSize=@pageSizeValue">@totalPages</a>
+                    </li>
+                }
+
+                // Next page
+                var nextDisabled = currentPage == totalPages ? "disabled" : "";
+                <li class="page-item @nextDisabled">
+                    @if (currentPage < totalPages)
+                    {
+                        <a class="page-link" href="?page=@(currentPage + 1)&search=@search&sort=@sort&pageSize=@pageSizeValue" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    }
+                </li>
+            }
+        </ul>
+    </nav>
+}
 
 @section Scripts {
     <script>
@@ -158,10 +277,11 @@
         });
 
         rowChks.forEach(c => c.addEventListener('change', refreshToolbar));
+
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
         // SIMPLE TYPING SEARCH - This will work
         const searchInput = document.getElementById('searchInput');
@@ -183,9 +303,30 @@
                     params.append('sort', sortValue.value);
                 }
 
+                // Preserve page size
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentPageSize = urlParams.get('pageSize');
+                if (currentPageSize) {
+                    params.append('pageSize', currentPageSize);
+                }
+
+                // Reset to page 1 when searching
+                params.append('page', '1');
+
                 // Simple page reload with search parameters
                 window.location.href = '?' + params.toString();
             }, 800); // Wait 800ms after typing stops
+        });
+
+        // Page size change handler
+        document.getElementById('pageSizeSelect')?.addEventListener('change', function() {
+            const newPageSize = this.value;
+            const params = new URLSearchParams(window.location.search);
+
+            params.set('pageSize', newPageSize);
+            params.set('page', '1'); // Reset to first page when changing page size
+
+            window.location.href = '?' + params.toString();
         });
     </script>
 }

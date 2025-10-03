@@ -21,11 +21,11 @@ namespace Task_5_webApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "")
+        public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "", int page = 1, int pageSize = 10)
         {
             var q = _db.Users.AsNoTracking();
 
-            //Apply search filter
+            // Apply search filter
             if (!string.IsNullOrWhiteSpace(search))
             {
                 q = q.Where(u =>
@@ -45,10 +45,26 @@ namespace Task_5_webApp.Controllers
                 "lastlogin_desc" => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue),
                 _ => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue)
             };
+
+            // Pagination logic
+            var totalCount = await q.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Ensure page is within valid range
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var users = await q
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             ViewBag.Search = search;
             ViewBag.Sort = sort;
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = totalPages;
 
-            var users = await q.ToListAsync();
             return View(users);
         }
 
