@@ -3,7 +3,7 @@
 @functions {
     public string GetRelativeTime(DateTime dt)
     {
-        var span = DateTime.Now - DateTime.Now;
+        var span = DateTime.Now - dt;
         if (span.TotalSeconds < 60)
             return $"{(int)span.TotalSeconds} seconds ago";
         if (span.TotalMinutes < 60)
@@ -26,7 +26,7 @@
         bool isAsc = sort == $"{col}_asc";
         bool isDesc = sort == $"{col}_desc";
         string next = isAsc ? $"{col}_desc" : $"{col}_asc";
-        string arrow = isAsc ? "↑" : isDesc ? "↓" : "";
+        string arrow = isAsc ? "<i class='fa-solid fa-sort-up'></i>" : isDesc ? "<i class='fa-solid fa-sort-down'></i>" : "";
         string label = col switch
         {
             "name" => "Name",
@@ -50,7 +50,7 @@
         <button formaction="/Users/Unblock" class="btn btn-outline-success" id="btnUnblock" disabled title="Unblock selected">
             <i class="fa-solid fa-unlock"></i> Unblock
         </button>
-        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete"  title="Delete selected">
+        <button formaction="/Users/Delete" class="btn btn-outline-secondary" id="btnDelete"  disabled title="Delete selected">
             <i class="fa-solid fa-trash"></i> Delete
         </button>
         <button formaction="/Users/DeleteUnverified" class="btn btn-outline-warning" title="Delete all unverified">
@@ -59,9 +59,12 @@
     </form>
 
     <!-- Filter aligned right -->
-    <div class="ms-auto" style="min-width: 250px;">
-        <input type="text" class="form-control" placeholder="Filter" />
-    </div>
+    <form method="get" asp-action="Index" class="d-flex mb-3">
+        <input type="text" name="search" class="form-control me-2" placeholder="Search by name or email" value="@ViewBag.Search" />
+        <input type="hidden" name="sort" value="@ViewBag.Sort" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
 </div>
 
 <!-- User table -->
@@ -124,6 +127,7 @@
                 // Reset buttons
                 btnBlock.disabled = true;
                 btnUnblock.disabled = true;
+                btnDelete.disabled = true;
 
                 // Determine status of selected users
                 const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4)").textContent.trim());
@@ -134,6 +138,7 @@
 
                     btnBlock.disabled = !allUnblocked;
                     btnUnblock.disabled = !allBlocked;
+                    btnDelete.disabled = false;
                 }
 
                 // Sync selected IDs

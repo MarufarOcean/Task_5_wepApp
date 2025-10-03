@@ -22,9 +22,18 @@ namespace Task_5_webApp.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Index(string sort = "lastlogin_desc")
+        public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "")
         {
             var q = _db.Users.AsNoTracking();
+
+            //Apply search filter
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                q = q.Where(u =>
+                    u.FirstName.Contains(search) ||
+                    u.LastName.Contains(search) ||
+                    u.Email.Contains(search));
+            }
 
             // Sorting logic
             q = sort switch
@@ -37,7 +46,8 @@ namespace Task_5_webApp.Controllers
                 "lastlogin_desc" => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue),
                 _ => q.OrderByDescending(u => u.LastLoginTime ?? DateTime.MinValue)
             };
-
+            ViewBag.Search = search;
+            ViewBag.Sort = sort;
 
             var users = await q.ToListAsync();
             return View(users);
@@ -57,6 +67,8 @@ namespace Task_5_webApp.Controllers
             TempData["Success"] = "Your email has been verified. Account is now active.";
             return RedirectToAction("Login");
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> Block([FromForm] int[] ids)

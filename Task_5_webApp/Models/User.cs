@@ -6,7 +6,7 @@
 
         public string FirstName { get; set; } = default!;
         public string LastName { get; set; } = default!;
-        public string Designation { get; set; }
+        public string? Designation { get; set; }
         public string Email { get; set; } = default!;
         public string PasswordHash { get; set; } = default!;
         public bool IsEmailVerified { get; set; } = false;
