@@ -86,7 +86,7 @@ namespace Task_5_webApp.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Block([FromForm] int[] ids)
+        public async Task<IActionResult> Block([FromForm] int[] ids, [FromForm] int pageSize = 10, int page = 1)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
             foreach (var u in set) u.Status = "Blocked";
@@ -100,12 +100,12 @@ namespace Task_5_webApp.Controllers
             }
 
             TempData["Success"] = "Blocked successfully.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { pageSize, page });
 
         }
 
         [HttpPost]
-        public async Task<IActionResult> Unblock([FromForm] int[] ids)
+        public async Task<IActionResult> Unblock([FromForm] int[] ids, [FromForm] int pageSize = 10, int page = 1)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
             foreach (var u in set)
@@ -117,11 +117,11 @@ namespace Task_5_webApp.Controllers
             }
             await _db.SaveChangesAsync();
             TempData["Success"] = "Unblocked successfully.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { pageSize, page });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete([FromForm] int[] ids)
+        public async Task<IActionResult> Delete([FromForm] int[] ids, [FromForm] int pageSize = 10, int page = 1)
         {
             var set = await _db.Users.Where(u => ids.Contains(u.Id)).ToListAsync();
             //hard delete (not a flag)
@@ -134,17 +134,17 @@ namespace Task_5_webApp.Controllers
                 return RedirectToAction("Login", "Account");
             }
             TempData["Success"] = "Selected users deleted.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { pageSize, page });
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteUnverified()
+        public async Task<IActionResult> DeleteUnverified([FromForm] int pageSize = 10, int page = 1)
         {
             var set = await _db.Users.Where(u => u.Status == "Unverified").ToListAsync();
             _db.Users.RemoveRange(set);
             await _db.SaveChangesAsync();
             TempData["Success"] = "All unverified users deleted.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { pageSize, page });
         }
 
     }

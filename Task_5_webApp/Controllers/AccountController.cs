@@ -94,7 +94,7 @@ namespace Task_5_webApp.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password, bool rememberMe = false)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
@@ -129,7 +129,13 @@ namespace Task_5_webApp.Controllers
                 new Claim(ClaimTypes.Email, user.Email)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = rememberMe, // enable "Remember Me"
+                ExpiresUtc = rememberMe ? DateTimeOffset.Now.AddDays(1) : DateTimeOffset.Now.AddMinutes(30)
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), authProperties);
 
             return RedirectToAction("Index", "Users");
         }

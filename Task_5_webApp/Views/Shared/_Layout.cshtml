@@ -1,5 +1,4 @@
-﻿<!-- Views/Shared/_Layout.cshtml -->
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8" />
@@ -12,7 +11,11 @@
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">User Admin app</a>
+                <a class="navbar-brand"
+                   asp-controller="@(User.Identity.IsAuthenticated ? "Users" : "Account")"
+                   asp-action="@(User.Identity.IsAuthenticated ? "Index" : "Login")">
+                    User Admin App
+                </a>
                 <div class="d-flex align-items-center gap-2">
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
