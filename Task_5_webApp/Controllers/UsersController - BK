@@ -20,6 +20,7 @@ namespace Task_5_webApp.Controllers
             _logoutService = logoutService;
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Index(string sort = "lastlogin_desc", string search = "")
         {

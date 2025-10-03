@@ -41,7 +41,7 @@
 <h2 class="mb-4">User Management</h2>
 
 <!-- Toolbar + Search -->
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 bg-light">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
     <!-- Toolbar -->
     <form id="toolbarForm" method="post" class="d-flex flex-wrap gap-2">
         <button formaction="/Users/Block" class="btn btn-outline-danger" id="btnBlock" disabled>
@@ -59,11 +59,11 @@
     </form>
 
     <!-- Filter aligned right -->
-    <!-- Search -->
-    <div class="d-flex">
-        <input type="text" id="searchInput" class="form-control text-opacity-50" placeholder="Filter" value="@ViewBag.Search" />
-        <input type="hidden" id="sortValue" value="@ViewBag.Sort" />
-    </div>
+    <form method="get" asp-action="Index" class="d-flex mb-3">
+        <input type="text" name="search" class="form-control me-2" placeholder="Search by name or email" value="@ViewBag.Search" />
+        <input type="hidden" name="sort" value="@ViewBag.Sort" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
 
 </div>
 
@@ -110,82 +110,59 @@
 
 @section Scripts {
     <script>
-        // Your existing checkbox code here (keep it as is)
-        const chkAll = document.getElementById('chkAll');
-        const rowChks = Array.from(document.querySelectorAll('.rowchk'));
-        const toolbarForm = document.getElementById('toolbarForm');
-        const btns = ['btnBlock', 'btnUnblock', 'btnDelete'].map(id => document.getElementById(id));
+        (() => {
+            const chkAll = document.getElementById('chkAll');
+            const rowChks = Array.from(document.querySelectorAll('.rowchk'));
+            const toolbarForm = document.getElementById('toolbarForm');
+            const btns = ['btnBlock', 'btnUnblock', 'btnDelete'].map(id => document.getElementById(id));
 
-        function refreshToolbar() {
-            const total = rowChks.length;
-            const checkedRows = rowChks.filter(c => c.checked);
-            const checked = checkedRows.length;
+            function refreshToolbar() {
+                const total = rowChks.length;
+                const checkedRows = rowChks.filter(c => c.checked);
+                const checked = checkedRows.length;
 
-            chkAll.indeterminate = checked > 0 && checked < total;
-            chkAll.checked = checked === total;
+                chkAll.indeterminate = checked > 0 && checked < total;
+                chkAll.checked = checked === total;
 
-            // Reset buttons
-            btnBlock.disabled = true;
-            btnUnblock.disabled = true;
-            btnDelete.disabled = true;
+                // Reset buttons
+                btnBlock.disabled = true;
+                btnUnblock.disabled = true;
+                btnDelete.disabled = true;
 
-            // Determine status of selected users
-            const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4)").textContent.trim());
+                // Determine status of selected users
+                const selectedStatuses = checkedRows.map(c => c.closest("tr").querySelector("td:nth-child(4)").textContent.trim());
 
-            if (selectedStatuses.length > 0) {
-                const allBlocked = selectedStatuses.every(s => s === "Blocked");
-                const allUnblocked = selectedStatuses.every(s => s !== "Blocked");
+                if (selectedStatuses.length > 0) {
+                    const allBlocked = selectedStatuses.every(s => s === "Blocked");
+                    const allUnblocked = selectedStatuses.every(s => s !== "Blocked");
 
-                btnBlock.disabled = !allUnblocked;
-                btnUnblock.disabled = !allBlocked;
-                btnDelete.disabled = false;
+                    btnBlock.disabled = !allUnblocked;
+                    btnUnblock.disabled = !allBlocked;
+                    btnDelete.disabled = false;
+                }
+
+                // Sync selected IDs
+                toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
+                checkedRows.forEach(c => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'ids';
+                    hidden.value = c.value;
+                    toolbarForm.appendChild(hidden);
+                });
             }
 
-            // Sync selected IDs
-            toolbarForm.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
-            checkedRows.forEach(c => {
-                const hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = 'ids';
-                hidden.value = c.value;
-                toolbarForm.appendChild(hidden);
+            chkAll.addEventListener('change', () => {
+                rowChks.forEach(c => c.checked = chkAll.checked);
+                refreshToolbar();
             });
-        }
 
-        chkAll.addEventListener('change', () => {
-            rowChks.forEach(c => c.checked = chkAll.checked);
-            refreshToolbar();
-        });
+            rowChks.forEach(c => c.addEventListener('change', refreshToolbar));
 
-        rowChks.forEach(c => c.addEventListener('change', refreshToolbar));
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
-
-        // SIMPLE TYPING SEARCH - This will work
-        const searchInput = document.getElementById('searchInput');
-        const sortValue = document.getElementById('sortValue');
-        let searchTimeout = null;
-
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-
-            searchTimeout = setTimeout(() => {
-                const searchTerm = this.value;
-                const params = new URLSearchParams();
-
-                if (searchTerm) {
-                    params.append('search', searchTerm);
-                }
-
-                if (sortValue.value) {
-                    params.append('sort', sortValue.value);
-                }
-
-                // Simple page reload with search parameters
-                window.location.href = '?' + params.toString();
-            }, 800); // Wait 800ms after typing stops
-        });
+        })();
     </script>
 }
