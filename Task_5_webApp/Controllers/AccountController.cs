@@ -113,11 +113,6 @@ namespace Task_5_webApp.Controllers
                 TempData["Error"] = "Invalid credentials.";
                 return View();
             }
-            //if (!user.IsEmailVerified)
-            //{
-            //    TempData["Error"] = "Please verify your email before logging in.";
-            //    return View();
-            //}
 
             user.LastLoginTime = DateTime.Now;
             await _db.SaveChangesAsync();

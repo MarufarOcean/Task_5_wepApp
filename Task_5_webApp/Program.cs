@@ -27,7 +27,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
     });
 
 // Custom Services
@@ -49,6 +50,7 @@ app.UseStaticFiles(); // ← Only once
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+//app.UseDeveloperExceptionPage(); // ← For development only
 
 // Global guard middleware
 app.Use(async (ctx, next) =>
@@ -81,5 +83,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
+
 
 app.Run();
