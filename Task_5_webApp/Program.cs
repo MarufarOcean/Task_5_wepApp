@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Task_5_webApp.Data;
 using Task_5_webApp.Services;
@@ -7,12 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Database Context
 builder.Services.AddDbContext<AppDBContext>(opts =>
     opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllersWithViews();
+// Data Protection - FIXED
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"C:\temp\aspnet-keys\"))
+    .SetApplicationName("Task_5_webApp");
 
-// IMPORTANT: Cookie auth (simple) to allow one-char passwords, not using Identity policies
+// Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -24,12 +30,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 
+// Custom Services
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IUserGuard, UserGuard>();
 builder.Services.AddScoped<ILogoutService, LogoutService>();
-
-
-
 
 var app = builder.Build();
 
@@ -37,23 +41,22 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStaticFiles();
+
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // ← Only once
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStaticFiles();
 
-//Global guard for all requests except login/register/confirm
+// Global guard middleware
 app.Use(async (ctx, next) =>
 {
     var path = ctx.Request.Path.Value?.ToLower() ?? "";
-    // IMPORTANT: allow authentication endpoints without user/blocked checks
-    if (path.StartsWith("/account/login") || 
-        path.StartsWith("/account/register") || 
+    // Allow authentication endpoints without user/blocked checks
+    if (path.StartsWith("/account/login") ||
+        path.StartsWith("/account/register") ||
         path.StartsWith("/account/confirm") ||
         path.StartsWith("/account/forgotpassword") ||
         path.StartsWith("/account/resetpassword"))
@@ -62,7 +65,7 @@ app.Use(async (ctx, next) =>
         return;
     }
 
-    // nota bene: check existence + not blocked for authenticated areas
+    // Check existence + not blocked for authenticated areas
     var guard = ctx.RequestServices.GetRequiredService<IUserGuard>();
     var ok = await guard.CheckUserAllowedAsync(ctx);
     if (!ok)
@@ -73,13 +76,10 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-
 app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
